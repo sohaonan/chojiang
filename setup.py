@@ -5,7 +5,7 @@ DATA_FILES = ['config.json']
 OPTIONS = {
     'argv_emulation': True,
     'packages': ['docx', 'PIL'],
-    'iconfile': 'icon.icns',
+    'iconfile': 'logo.ico',
     'plist': {
         'CFBundleName': '抽奖系统',
         'CFBundleDisplayName': '抽奖系统',

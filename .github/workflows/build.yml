@@ -29,6 +29,7 @@ jobs:
           --add-data "config.json;." ^
           --add-data "logo.jpg;." ^
           --name "lottery" ^
+          --icon "logo.ico" ^
           --hidden-import tkinter ^
           --hidden-import tkinter.ttk ^
           --hidden-import PIL ^
