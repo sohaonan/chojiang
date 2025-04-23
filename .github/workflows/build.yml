@@ -10,10 +10,10 @@ jobs:
     runs-on: windows-latest
     
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: '3.9'
         
@@ -43,7 +43,7 @@ jobs:
         echo 3. 配置文件 config.json 可以修改管理密码>> "dist\抽奖程序\使用说明.txt"
         
     - name: Upload artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: 抽奖程序
         path: dist/抽奖程序 
