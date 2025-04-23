@@ -21,11 +21,12 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+        pip install pyinstaller
         
     - name: Build executable
       shell: cmd
       run: |
-        pyinstaller --noconfirm --onedir --windowed ^
+        python -m PyInstaller --noconfirm --onedir --windowed ^
           --add-data "config.json;." ^
           --add-data "logo.jpg;." ^
           --name "lottery" ^
