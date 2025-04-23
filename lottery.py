@@ -1,16 +1,18 @@
+# -*- coding: utf-8 -*-
+
+import os
+import sys
+import json
+import random
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 import sqlite3
-import random
-import csv
 from docx import Document
-import os
 import shutil
 import time
 import threading
-import json
-import sys
 from PIL import Image, ImageTk
+import csv
 
 def resource_path(relative_path):
     """ 获取资源的绝对路径 """
@@ -20,6 +22,26 @@ def resource_path(relative_path):
     except Exception:
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
+
+def create_template():
+    """创建导入模板"""
+    # 创建 CSV 模板
+    csv_template = "参与者导入模板.csv"
+    with open(csv_template, 'w', encoding='utf-8', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(["姓名", "是否白名单"])
+        writer.writerow(["张三", "否"])
+        writer.writerow(["李四", "是"])
+    
+    # 创建 Word 模板
+    doc = Document()
+    doc.add_heading('参与者导入模板', 0)
+    doc.add_paragraph('请在此文档中每行输入一个参与者姓名')
+    doc.add_paragraph('张三')
+    doc.add_paragraph('李四')
+    doc.save("参与者导入模板.docx")
+    
+    return csv_template, "参与者导入模板.docx"
 
 class LoginWindow:
     def __init__(self, parent):
@@ -66,7 +88,7 @@ class LoginWindow:
             with open(config_path, 'r', encoding='utf-8') as f:
                 self.config = json.load(f)
         except Exception as e:
-            messagebox.showerror("错误", f"加载配置文件失败: {str(e)}")
+            messagebox.showerror("错误", "加载配置文件失败: {}".format(str(e)))
             self.config = {"admin": {"password": "123456"}}
             
     def login(self):
@@ -96,7 +118,7 @@ class LoginWindow:
         height = self.window.winfo_height()
         x = (self.window.winfo_screenwidth() // 2) - (width // 2)
         y = (self.window.winfo_screenheight() // 2) - (height // 2)
-        self.window.geometry(f'{width}x{height}+{x}+{y}')
+        self.window.geometry('{}x{}+{}+{}'.format(width, height, x, y))
 
 class LotterySystem:
     def __init__(self, root):
@@ -390,9 +412,9 @@ class LotterySystem:
         for pool in pools:
             pool_id, name, total_count = pool
             if total_count is None:  # 如果奖池为空
-                pool_values.append(f"{name} (总人数: 0)")
+                pool_values.append("{} (总人数: 0)".format(name))
             else:
-                pool_values.append(f"{name} (总人数: {total_count})")
+                pool_values.append("{} (总人数: {})".format(name, total_count))
         
         self.pool_combo['values'] = pool_values
         
@@ -470,19 +492,10 @@ class LotterySystem:
         participant_ops_frame = ttk.Frame(right_frame)
         participant_ops_frame.pack(fill='x', padx=5, pady=5)
         
-        # 参与者名称输入
-        ttk.Label(participant_ops_frame, text="参与者姓名:").pack(side='left', padx=5)
-        self.participant_name_var = tk.StringVar()
-        self.participant_entry = ttk.Entry(participant_ops_frame, textvariable=self.participant_name_var)
-        self.participant_entry.pack(side='left', padx=5)
-        
-        # 白名单复选框
-        self.is_whitelist_var = tk.BooleanVar()
-        ttk.Checkbutton(participant_ops_frame, text="白名单", variable=self.is_whitelist_var).pack(side='left', padx=5)
-        
         # 参与者操作按钮
         ttk.Button(participant_ops_frame, text="添加参与者", command=self.add_participant).pack(side='left', padx=5)
         ttk.Button(participant_ops_frame, text="删除参与者", command=self.delete_participant).pack(side='left', padx=5)
+        ttk.Button(participant_ops_frame, text="修改参与者", command=self.edit_participant).pack(side='left', padx=5)
         ttk.Button(participant_ops_frame, text="修改白名单", command=self.toggle_whitelist).pack(side='left', padx=5)
         
         # 导入导出按钮
@@ -490,12 +503,21 @@ class LotterySystem:
         io_frame.pack(fill='x', padx=5, pady=5)
         ttk.Button(io_frame, text="导入参与者", command=self.import_participants).pack(side='left', padx=5)
         ttk.Button(io_frame, text="导出参与者", command=self.export_participants).pack(side='left', padx=5)
+        ttk.Button(io_frame, text="下载导入模板", command=self.download_template).pack(side='left', padx=5)
         
         # 绑定选择事件
         self.pool_tree.bind('<<TreeviewSelect>>', self.on_pool_selected)
         
         # 初始化奖池列表
         self.refresh_pools()
+
+    def download_template(self):
+        """下载导入模板"""
+        try:
+            csv_template, docx_template = create_template()
+            messagebox.showinfo("成功", "模板已创建：\n1. {}\n2. {}".format(csv_template, docx_template))
+        except Exception as e:
+            messagebox.showerror("错误", "创建模板失败: {}".format(str(e)))
 
     def refresh_pools(self):
         """刷新奖池列表"""
@@ -571,7 +593,7 @@ class LotterySystem:
         except sqlite3.IntegrityError:
             messagebox.showerror("错误", "奖池名称已存在")
         except Exception as e:
-            messagebox.showerror("错误", f"添加奖池失败: {str(e)}")
+            messagebox.showerror("错误", "添加奖池失败: {}".format(str(e)))
             
     def delete_pool(self):
         """删除选中的奖池"""
@@ -592,7 +614,7 @@ class LotterySystem:
             self.refresh_participants(None)
             messagebox.showinfo("成功", "删除奖池成功")
         except Exception as e:
-            messagebox.showerror("错误", f"删除奖池失败: {str(e)}")
+            messagebox.showerror("错误", "删除奖池失败: {}".format(str(e)))
             
     def rename_pool(self):
         """重命名选中的奖池"""
@@ -615,7 +637,7 @@ class LotterySystem:
         except sqlite3.IntegrityError:
             messagebox.showerror("错误", "奖池名称已存在")
         except Exception as e:
-            messagebox.showerror("错误", f"重命名奖池失败: {str(e)}")
+            messagebox.showerror("错误", "重命名奖池失败: {}".format(str(e)))
             
     def add_participant(self):
         """添加新参与者"""
@@ -624,28 +646,62 @@ class LotterySystem:
             messagebox.showwarning("警告", "请先选择奖池")
             return
             
-        name = self.participant_name_var.get().strip()
-        if not name:
-            messagebox.showwarning("警告", "请输入参与者姓名")
-            return
-            
         try:
             pool_id = self.pool_tree.item(selection[0])['values'][0]
-            is_whitelist = self.is_whitelist_var.get()
             
-            self.cursor.execute(
-                "INSERT INTO participants (name, pool_id, is_whitelist) VALUES (?, ?, ?)",
-                (name, pool_id, is_whitelist)
-            )
-            self.conn.commit()
+            # 创建添加窗口
+            add_window = tk.Toplevel(self.root)
+            add_window.title("添加参与者")
+            add_window.geometry("300x200")
+            add_window.transient(self.root)
+            add_window.grab_set()
             
-            self.refresh_pools()
-            self.refresh_participants(pool_id)
-            self.participant_name_var.set("")
-            self.is_whitelist_var.set(False)
-            messagebox.showinfo("成功", "添加参与者成功")
+            # 创建输入框
+            ttk.Label(add_window, text="姓名:").pack(pady=5)
+            name_var = tk.StringVar()
+            name_entry = ttk.Entry(add_window, textvariable=name_var)
+            name_entry.pack(pady=5)
+            
+            # 创建白名单复选框
+            whitelist_var = tk.BooleanVar()
+            ttk.Checkbutton(add_window, text="白名单", variable=whitelist_var).pack(pady=5)
+            
+            def save_participant():
+                name = name_var.get().strip()
+                if not name:
+                    messagebox.showwarning("警告", "姓名不能为空", parent=add_window)
+                    return
+                    
+                try:
+                    self.cursor.execute(
+                        "INSERT INTO participants (name, pool_id, is_whitelist) VALUES (?, ?, ?)",
+                        (name, pool_id, whitelist_var.get())
+                    )
+                    self.conn.commit()
+                    
+                    self.refresh_pools()
+                    self.refresh_participants(pool_id)
+                    add_window.destroy()
+                    messagebox.showinfo("成功", "添加参与者成功")
+                except Exception as e:
+                    messagebox.showerror("错误", "添加参与者失败: {}".format(str(e)))
+            
+            # 创建保存按钮
+            ttk.Button(add_window, text="保存", command=save_participant).pack(pady=20)
+            
+            # 窗口居中
+            add_window.update()
+            width = add_window.winfo_width()
+            height = add_window.winfo_height()
+            x = (add_window.winfo_screenwidth() // 2) - (width // 2)
+            y = (add_window.winfo_screenheight() // 2) - (height // 2)
+            add_window.geometry('{}x{}+{}+{}'.format(width, height, x, y))
+            
+            # 设置初始焦点
+            name_entry.focus()
+            
         except Exception as e:
-            messagebox.showerror("错误", f"添加参与者失败: {str(e)}")
+            messagebox.showerror("错误", "添加参与者失败: {}".format(str(e)))
             
     def delete_participant(self):
         """删除选中的参与者"""
@@ -670,7 +726,7 @@ class LotterySystem:
             self.refresh_participants(pool_id)
             messagebox.showinfo("成功", "删除参与者成功")
         except Exception as e:
-            messagebox.showerror("错误", f"删除参与者失败: {str(e)}")
+            messagebox.showerror("错误", "删除参与者失败: {}".format(str(e)))
             
     def toggle_whitelist(self):
         """切换参与者的白名单状态"""
@@ -695,7 +751,7 @@ class LotterySystem:
             self.refresh_participants(pool_id)
             messagebox.showinfo("成功", "修改白名单状态成功")
         except Exception as e:
-            messagebox.showerror("错误", f"修改白名单状态失败: {str(e)}")
+            messagebox.showerror("错误", "修改白名单状态失败: {}".format(str(e)))
             
     def import_participants(self):
         """从文件导入参与者"""
@@ -722,9 +778,11 @@ class LotterySystem:
             if file_path.endswith('.csv'):
                 with open(file_path, 'r', encoding='utf-8') as f:
                     reader = csv.reader(f)
+                    next(reader)  # 跳过标题行
                     for row in reader:
                         if row and row[0].strip():
-                            names.append((row[0].strip(), pool_id, False))
+                            is_whitelist = row[1].strip().lower() == "是" if len(row) > 1 else False
+                            names.append((row[0].strip(), pool_id, is_whitelist))
             else:
                 doc = Document(file_path)
                 for paragraph in doc.paragraphs:
@@ -740,12 +798,12 @@ class LotterySystem:
                 
                 self.refresh_pools()
                 self.refresh_participants(pool_id)
-                messagebox.showinfo("成功", f"成功导入 {len(names)} 个参与者")
+                messagebox.showinfo("成功", "成功导入 {} 个参与者".format(len(names)))
             else:
                 messagebox.showwarning("警告", "文件中没有找到有效的参与者数据")
                 
         except Exception as e:
-            messagebox.showerror("错误", f"导入参与者失败: {str(e)}")
+            messagebox.showerror("错误", "导入参与者失败: {}".format(str(e)))
             
     def export_participants(self):
         """导出参与者列表到文件"""
@@ -760,7 +818,7 @@ class LotterySystem:
         file_path = filedialog.asksaveasfilename(
             title="保存文件",
             defaultextension=".csv",
-            initialfile=f"{pool_name}_参与者列表",
+            initialfile="{}_参与者列表".format(pool_name),
             filetypes=[("CSV Files", "*.csv")]
         )
         
@@ -783,7 +841,7 @@ class LotterySystem:
             messagebox.showinfo("成功", "导出参与者列表成功")
             
         except Exception as e:
-            messagebox.showerror("错误", f"导出参与者列表失败: {str(e)}")
+            messagebox.showerror("错误", "导出参与者列表失败: {}".format(str(e)))
 
     def start_lottery(self):
         if self.is_rolling:
@@ -840,7 +898,7 @@ class LotterySystem:
             threading.Thread(target=self.roll_names, args=(count, available_names), daemon=True).start()
             
         except Exception as e:
-            messagebox.showerror("错误", f"抽奖失败: {str(e)}")
+            messagebox.showerror("错误", "抽奖失败: {}".format(str(e)))
             self.show_setup()
             
     def roll_names(self, count, available_names):
@@ -861,7 +919,7 @@ class LotterySystem:
         
         # 显示结果
         for i, winner in enumerate(winners, 1):
-            self.result_text.insert(tk.END, f"{i}. {winner}\n")
+            self.result_text.insert(tk.END, "{}. {}\n".format(i, winner))
         
         # 切换到结果页面
         self.show_result()
@@ -890,6 +948,75 @@ class LotterySystem:
 
     def __del__(self):
         self.conn.close()
+
+    def edit_participant(self):
+        """修改选中的参与者"""
+        pool_selection = self.pool_tree.selection()
+        participant_selection = self.participant_tree.selection()
+        
+        if not pool_selection or not participant_selection:
+            messagebox.showwarning("警告", "请选择要修改的参与者")
+            return
+            
+        try:
+            pool_id = self.pool_tree.item(pool_selection[0])['values'][0]
+            participant_id = self.participant_tree.item(participant_selection[0])['values'][0]
+            current_name = self.participant_tree.item(participant_selection[0])['values'][1]
+            current_whitelist = self.participant_tree.item(participant_selection[0])['values'][2] == "是"
+            
+            # 创建修改窗口
+            edit_window = tk.Toplevel(self.root)
+            edit_window.title("修改参与者")
+            edit_window.geometry("300x200")
+            edit_window.transient(self.root)
+            edit_window.grab_set()
+            
+            # 创建输入框
+            ttk.Label(edit_window, text="姓名:").pack(pady=5)
+            name_var = tk.StringVar(value=current_name)
+            name_entry = ttk.Entry(edit_window, textvariable=name_var)
+            name_entry.pack(pady=5)
+            
+            # 创建白名单复选框
+            whitelist_var = tk.BooleanVar(value=current_whitelist)
+            ttk.Checkbutton(edit_window, text="白名单", variable=whitelist_var).pack(pady=5)
+            
+            def save_changes():
+                new_name = name_var.get().strip()
+                if not new_name:
+                    messagebox.showwarning("警告", "姓名不能为空", parent=edit_window)
+                    return
+                    
+                try:
+                    self.cursor.execute(
+                        "UPDATE participants SET name = ?, is_whitelist = ? WHERE id = ?",
+                        (new_name, whitelist_var.get(), participant_id)
+                    )
+                    self.conn.commit()
+                    
+                    self.refresh_participants(pool_id)
+                    edit_window.destroy()
+                    messagebox.showinfo("成功", "修改参与者成功")
+                except Exception as e:
+                    messagebox.showerror("错误", "修改参与者失败: {}".format(str(e)))
+            
+            # 创建保存按钮
+            ttk.Button(edit_window, text="保存", command=save_changes).pack(pady=20)
+            
+            # 窗口居中
+            edit_window.update()
+            width = edit_window.winfo_width()
+            height = edit_window.winfo_height()
+            x = (edit_window.winfo_screenwidth() // 2) - (width // 2)
+            y = (edit_window.winfo_screenheight() // 2) - (height // 2)
+            edit_window.geometry('{}x{}+{}+{}'.format(width, height, x, y))
+            
+            # 设置初始焦点
+            name_entry.focus()
+            name_entry.select_range(0, tk.END)
+            
+        except Exception as e:
+            messagebox.showerror("错误", "修改参与者失败: {}".format(str(e)))
 
 if __name__ == '__main__':
     root = tk.Tk()
