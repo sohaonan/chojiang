@@ -23,6 +23,7 @@ jobs:
         pip install -r requirements.txt
         
     - name: Build executable
+      shell: cmd
       run: |
         pyinstaller --noconfirm --onedir --windowed ^
           --add-data "config.json;." ^
@@ -36,6 +37,7 @@ jobs:
           lottery.py
           
     - name: Create README
+      shell: cmd
       run: |
         echo 使用说明：> "dist\抽奖程序\使用说明.txt"
         echo 1. 双击"抽奖程序.exe"运行程序>> "dist\抽奖程序\使用说明.txt"
