@@ -28,7 +28,7 @@ jobs:
         pyinstaller --noconfirm --onedir --windowed ^
           --add-data "config.json;." ^
           --add-data "logo.jpg;." ^
-          --name "抽奖程序" ^
+          --name "lottery" ^
           --hidden-import tkinter ^
           --hidden-import tkinter.ttk ^
           --hidden-import PIL ^
@@ -39,13 +39,13 @@ jobs:
     - name: Create README
       shell: cmd
       run: |
-        echo 使用说明：> "dist\抽奖程序\使用说明.txt"
-        echo 1. 双击"抽奖程序.exe"运行程序>> "dist\抽奖程序\使用说明.txt"
-        echo 2. 如果无法运行，请右键选择"以管理员身份运行">> "dist\抽奖程序\使用说明.txt"
-        echo 3. 配置文件 config.json 可以修改管理密码>> "dist\抽奖程序\使用说明.txt"
+        echo 使用说明：> "dist\lottery\使用说明.txt"
+        echo 1. 双击"lottery.exe"运行程序>> "dist\lottery\使用说明.txt"
+        echo 2. 如果无法运行，请右键选择"以管理员身份运行">> "dist\lottery\使用说明.txt"
+        echo 3. 配置文件 config.json 可以修改管理密码>> "dist\lottery\使用说明.txt"
         
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: 抽奖程序
-        path: dist/抽奖程序 
+        name: lottery
+        path: dist/lottery 
